@@ -44,8 +44,10 @@ class Blockchain {
      * Utility method that return a Promise that will resolve with the height of the chain
      */
     async getChainHeight() {
-        return new Promise((resolve, reject) => {
-            resolve(this.height);
+        return new Promise((resolve) => {
+
+                resolve(this.height);
+
         });
     }
 
@@ -64,19 +66,37 @@ class Blockchain {
     async _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            let height = await self.getChainHeight();
-            block.height = height+1;
-            if ( block.height > 0) {
-                block.previousBlockHash = self.chain[height].hash;
+                let height = await self.getChainHeight();
+                block.height = height + 1;
+                if (height >= 0) {
+                    block.previousBlockHash = self.chain[height].hash;
+                }
+                block.time = new Date().getTime().toString().slice(0, -3);
+                block.hash = SHA256(JSON.stringify(block)).toString();
+                let validate = await this.validateChain();
+
+                if (validate.length == 0 && block) {
+                    self.chain.push(block);
+                    self.height = block.height;
+                    resolve(block);
+                }
+                else {
+                    // reject("Error creating or adding new block.");
+                    let validationError = "";
+                    if (validate.length > 0) {
+                        validationError = "";
+                        validate.forEach(error => {
+                            validationError + "\t" + error
+                        });
+                        reject(validationError.length==0?"Error creating or adding new block.":validationError);
+
+                    }
+                }
+
             }
-            block.time = new Date().getTime().toString().slice(0, -3);
-            block.hash = SHA256(JSON.stringify(block)).toString();
-            self.chain.push(block);
-            self.height = block.height;
-            resolve(block);
-            reject("Error creating or adding new block");
-        });
+        );
     }
+
 
     /**
      * The requestMessageOwnershipVerification(address) method
@@ -121,13 +141,17 @@ class Blockchain {
                 const veryfied = bitcoinMessage.verify(message, address, signature);
                 if (veryfied) {
                     const block = new BlockClass.Block({owner: address, star: star});
-                    let addedBlock = await self._addBlock(block);
-                    resolve(addedBlock);
-                } else {
-                    reject('Error during creation of the block.');
+                    self._addBlock(block).then(
+                        addedBlock => resolve(addedBlock)
+                    ).catch(error => reject(error));
+
                 }
-            } else {
-                reject('Time is more than 5 minutes.')
+                else {
+                    reject(Error('Error during creation of the block.'));
+                }
+            }
+            else {
+                reject(Error('Time is more than 5 minutes.'));
             }
         });
     }
@@ -162,7 +186,7 @@ class Blockchain {
             if (block) {
                 resolve(block);
             } else {
-                resolve(null);
+                reject("No data");
             }
         });
     }
@@ -178,8 +202,8 @@ class Blockchain {
         let stars = [];
         return new Promise((resolve, reject) => {
             self.chain.forEach(block => {
-                if (block.getBData()!=null && block.getBData().owner === address) {
-                    stars.push(block);
+                if (block.getBData() != null && block.getBData().owner === address) {
+                    stars.push(block.getBData());
                 }
             });
             if (stars) {
@@ -207,15 +231,12 @@ class Blockchain {
                         if (self.chain.length > 1) {
                             if (block.height + 1 <= self.chain.length) {
                                 if (!validated()) {
-                                    errorLog.push(Error(`Block # ${block.height} hash is not correct.`))
+                                    errorLog.push(`Block # ${block.height} hash is not correct.`)
                                 }
-                                if (!self.chain[block.height + 1].previousBlockHash == block.hash) {
-                                    errorLog.push(Error(`Previous block hash of block # ${block.height} is not correct.`))
+                                if (block.height > 0 && !self.chain[block.height - 1].hash == block.previousBlockHash) {
+                                    errorLog.push(`Previous block hash of block # ${block.height} is not correct.`)
                                 }
                             }
-                        }
-                        if (self.chain.length == 1 && !validated()) {
-                            errorLog.push(Error(`Block # ${block.height} hash is not correct.`))
                         }
 
                     }
@@ -223,7 +244,7 @@ class Blockchain {
                 if (errorLog) {
                     resolve(errorLog);
                 } else {
-                    reject(Error("Error validating chain."))
+                    reject("Error validating chain.")
                 }
 
             }
