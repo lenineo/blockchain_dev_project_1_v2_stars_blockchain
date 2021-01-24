@@ -1,11 +1,11 @@
 /**
  *                          Block class
- *  The Block class is a main component into any Blockchain platform, 
+ *  The Block class is a main component into any Blockchain platform,
  *  it will store the data and act as a dataset for your application.
  *  The class will expose a method to validate the data... The body of
  *  the block will contain an Object that contain the data to be stored,
  *  the data should be stored encoded.
- *  All the exposed methods should return a Promise to allow all the methods 
+ *  All the exposed methods should return a Promise to allow all the methods
  *  run asynchronous.
  */
 
@@ -15,14 +15,14 @@ const hex2ascii = require('hex2ascii');
 class Block {
 
     // Constructor - argument data will be the object containing the transaction data
-	constructor(data){
-		this.hash = null;                                           // Hash of the block
-		this.height = 0;                                            // Block Height (consecutive number of each block)
-		this.body = Buffer(JSON.stringify(data)).toString('hex');   // Will contain the transactions stored in the block, by default it will encode the data
-		this.time = 0;                                              // Timestamp for the Block creation
-		this.previousBlockHash = null;                              // Reference to the previous Block Hash
+    constructor(data) {
+        this.hash = null;                                           // Hash of the block
+        this.height = 0;                                            // Block Height (consecutive number of each block)
+        this.body = Buffer(JSON.stringify(data)).toString('hex');   // Will contain the transactions stored in the block, by default it will encode the data
+        this.time = 0;                                              // Timestamp for the Block creation
+        this.previousBlockHash = null;                              // Reference to the previous Block Hash
     }
-    
+
     /**
      *  validate() method will validate if the block has been tampered or not.
      *  Been tampered means that someone from outside the application tried to change
@@ -42,16 +42,14 @@ class Block {
             const currentHash = self.hash;
             self.hash = null;
             // Recalculate the hash of the Block
-            const recalcHash =  SHA256(JSON.stringify(self)).toString();
+            const recalcHash = SHA256(JSON.stringify(self)).toString();
 
             self.hash = currentHash;
             // Comparing if the hashes changed
             const compareHash = currentHash === recalcHash;
             // Returning the Block is not valid
-            if(compareHash){
-                resolve(compareHash)
-            }
-            
+            resolve(compareHash);
+
             // Returning the Block is valid
 
         });
@@ -60,29 +58,29 @@ class Block {
     /**
      *  Auxiliary Method to return the block body (decoding the data)
      *  Steps:
-     *  
+     *
      *  1. Use hex2ascii module to decode the data
      *  2. Because data is a javascript object use JSON.parse(string) to get the Javascript Object
-     *  3. Resolve with the data and make sure that you don't need to return the data for the `genesis block` 
+     *  3. Resolve with the data and make sure that you don't need to return the data for the `genesis block`
      *     or Reject with an error.
      */
-     getBData() {
+    getBData() {
         let self = this;
         // Getting the encoded data saved in the Block
         // Decoding the data to retrieve the JSON representation of the object
-        const decodedData = hex2ascii(self.body) ;
+        const decodedData = hex2ascii(self.body);
         // Parse the data to an object to be retrieve.
         let parsedData = JSON.parse(decodedData);
         // Resolve with the data if the object isn't the Genesis block
 
-       try {
-           if (parsedData && self.height > 0) {
-               return parsedData;
-           } else {
-               return null;
-           }
-       } catch(e){
-           throw new Error(e);
+        try {
+            if (parsedData && self.height > 0) {
+                return parsedData;
+            } else {
+                return null;
+            }
+        } catch (e) {
+            throw new Error(e);
         }
 
     }

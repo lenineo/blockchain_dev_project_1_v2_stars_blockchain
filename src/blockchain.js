@@ -46,7 +46,7 @@ class Blockchain {
     async getChainHeight() {
         return new Promise((resolve) => {
 
-                resolve(this.height);
+            resolve(this.height);
 
         });
     }
@@ -79,8 +79,7 @@ class Blockchain {
                     self.chain.push(block);
                     self.height = block.height;
                     resolve(block);
-                }
-                else {
+                } else {
                     // reject("Error creating or adding new block.");
                     let validationError = "";
                     if (validate.length > 0) {
@@ -88,7 +87,7 @@ class Blockchain {
                         validate.forEach(error => {
                             validationError + "\t" + error
                         });
-                        reject(validationError.length==0?"Error creating or adding new block.":validationError);
+                        reject(validationError.length == 0 ? "Error creating or adding new block." : validationError);
 
                     }
                 }
@@ -145,12 +144,10 @@ class Blockchain {
                         addedBlock => resolve(addedBlock)
                     ).catch(error => reject(error));
 
-                }
-                else {
+                } else {
                     reject(Error('Error during creation of the block.'));
                 }
-            }
-            else {
+            } else {
                 reject(Error('Time is more than 5 minutes.'));
             }
         });
@@ -181,13 +178,11 @@ class Blockchain {
      */
     async getBlockByHeight(height) {
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let block = self.chain.filter(p => p.height === height)[0];
-            if (block) {
-                resolve(block);
-            } else {
-                reject("No data");
-            }
+
+            resolve(block);
+
         });
     }
 
