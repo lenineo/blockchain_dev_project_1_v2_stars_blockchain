@@ -37,7 +37,7 @@ class Block {
      */
     async validate() {
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Save in auxiliary variable the current block hash
             const currentHash = self.hash;
             self.hash = null;
@@ -50,8 +50,6 @@ class Block {
             // Returning the Block is not valid
             if(compareHash){
                 resolve(compareHash)
-            } else {
-                reject(!compareHash);
             }
             
             // Returning the Block is valid
